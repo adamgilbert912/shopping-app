@@ -6,7 +6,7 @@ import HeaderText from './HeaderText'
 
 const CheckOutButton = props => {
     return (
-        <TouchableOpacity onPress={props.onPress} style={styles.container}>
+        <TouchableOpacity onPress={props.onPress} style={{...styles.container, ...props.style}}>
             <HeaderText style={{ color: 'white', fontSize: props.fontSize }}>{props.children}</HeaderText>
         </TouchableOpacity>
     )

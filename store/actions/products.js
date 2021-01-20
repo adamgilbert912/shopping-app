@@ -12,9 +12,12 @@ export const SET_CART_PRODUCTS = 'SET_CART_PRODUCTS'
 export const SET_ORDERS = 'SET_ORDERS'
 
 export const addToCart = product => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+
+        const token = getState().auth.token
+        const userId = getState().auth.userId
         try {
-            const response = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/u1.json')
+            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/${userId}.json?auth=${token}`)
 
             if (!response.ok) {
                 throw new Error('Error gettting user cart products.')
@@ -36,7 +39,7 @@ export const addToCart = product => {
             }
 
             if (productInCart) {
-                const quantityResponse = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/u1/${cartProductKey}.json`, {
+                const quantityResponse = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/${userId}/${cartProductKey}.json?auth=${token}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -50,7 +53,7 @@ export const addToCart = product => {
                     throw new Error('Error adjusting the quantity of item in cart.')
                 }
             } else {
-                const postResponse = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/u1.json', {
+                const postResponse = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/${userId}.json?auth=${token}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -79,9 +82,13 @@ export const addToCart = product => {
 }
 
 export const removeFromCart = product => {
-    return async dispatch => {
+
+    return async (dispatch, getState) => {
+
+        const token = getState().auth.token
+        const userId = getState().auth.userId
         try {
-            const response = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/u1.json')
+            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/${userId}.json`)
 
             if (!response.ok) {
                 throw new Error('Error getting user cart products.')
@@ -96,7 +103,7 @@ export const removeFromCart = product => {
                 }
             }
 
-            const deletionResponse = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/u1/${cartProductkey}.json`, {
+            const deletionResponse = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/${userId}/${cartProductkey}.json?auth=${token}`, {
                 method: 'DELETE'
             })
 
@@ -112,9 +119,10 @@ export const removeFromCart = product => {
 }
 
 export const fetchCartProducts = () => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const userId = getState().auth.userId
         try {
-            const response = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/u1.json')
+            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/${userId}.json`)
 
             if (!response.ok) {
                 throw new Error('Error fetching cart data.')
@@ -135,9 +143,10 @@ export const fetchCartProducts = () => {
 }
 
 export const fetchOrders = () => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const userId = getState().auth.userId
         try {
-            const response = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/orders/u1.json')
+            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/orders/${userId}.json`)
             
             if (!response.ok) {
                 throw new Error('Error fetching user orders.')
@@ -158,7 +167,9 @@ export const fetchOrders = () => {
 }
 
 export const fetchProducts = () => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const userId = getState().auth.userId
+        console.log(userId)
         try {
             const response = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/products.json')
 
@@ -170,10 +181,10 @@ export const fetchProducts = () => {
 
             let products = []
             for (const key in data) {
-                products = [new Product(data[key].title, data[key].price, data[key].imageSource, data[key].description, key, 'u1')]
+                products = [new Product(data[key].title, data[key].price, data[key].imageSource, data[key].description, key, data[key].ownerId)]
             }
 
-            dispatch({ type: SET_PRODDUCTS, products: products })
+            dispatch({ type: SET_PRODDUCTS, products: products, userProducts: products.filter(product => product.userId === userId) })
         } catch (err) {
             throw err
         }
@@ -181,8 +192,13 @@ export const fetchProducts = () => {
 }
 
 export const addToProducts = (title, price, imageSource, description) => {
-    return async dispatch => {
-        const response = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/products.json', {
+
+    return async (dispatch, getState) => {
+        try {
+        const token = getState().auth.token
+        const userId = getState().auth.userId
+
+        const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/products.json?auth=${token}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -191,20 +207,25 @@ export const addToProducts = (title, price, imageSource, description) => {
                 title,
                 price,
                 imageSource,
-                description
+                description,
+                ownerId: userId
             })
         })
 
         const data = await response.json()
 
-        dispatch({ type: ADD_TO_PRODUCTS, title: title, price: price, imageSource: imageSource, description: description, id: data.name })
+        dispatch({ type: ADD_TO_PRODUCTS, title: title, price: price, imageSource: imageSource, description: description, id: data.name, ownerId: userId })
+    } catch (err) {
+        Alert.alert('Error Occurred', err.message, [{text: 'Ok'}])
+    }
     }
 }
 
 export const editProduct = (title, description, imageSource, originalProduct) => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const token = getState().auth.token
         try {
-            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/products/${originalProduct.id}.json`, {
+            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/products/${originalProduct.id}.json?auth=${token}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -230,9 +251,11 @@ export const editProduct = (title, description, imageSource, originalProduct) =>
 
 
 export const deleteProduct = (product) => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const token = getState().auth.token
+
         try {
-            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/products/${product.id}.json`, {
+            const response = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/products/${product.id}.json?auth=${token}`, {
                 method: 'DELETE'
             })
 
@@ -248,10 +271,13 @@ export const deleteProduct = (product) => {
 }
 
 export const submitOrder = (products, total) => {
-    return async dispatch => {
+    return async (dispatch, getState) => {
+        const token = getState().auth.token
+        const userId = getState().auth.userId
+
         try {
             const date = new Date()
-            const orderResponse = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/orders/u1.json', {
+            const orderResponse = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/orders/${userId}.json?auth=${token}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -267,7 +293,7 @@ export const submitOrder = (products, total) => {
                 throw new Error('There was an error submitting this order.')
             }
 
-            const deleteCartResponse = await fetch('https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/u1.json', {
+            const deleteCartResponse = await fetch(`https://shop-app-8eda0-default-rtdb.firebaseio.com/cartProducts/${userId}.json?auth=${token}`, {
                 method: 'DELETE',
             })
 

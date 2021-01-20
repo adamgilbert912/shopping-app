@@ -1,13 +1,14 @@
 import * as Fonts from 'expo-font'
 import React, { useState } from 'react';
 import AppLoading from 'expo-app-loading'
-import { StyleSheet, Text, View } from 'react-native';
 import { combineReducers, createStore, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux'
 import ReduxThunk from 'redux-thunk'
 
 import ShopNavigator from './navigation/ShopNavigator'
 import productsReducer from './store/reducers/products'
+import authReducer from './store/reducers/auth'
+import NavigationContainer from './navigation/NavigationContainer'
 
 const loadFonts = () => {
   return (
@@ -19,7 +20,8 @@ const loadFonts = () => {
 }
 
 const root = combineReducers({
-  products: productsReducer
+  products: productsReducer,
+  auth: authReducer
 })
 
 const store = createStore(root, applyMiddleware(ReduxThunk))
@@ -33,11 +35,7 @@ export default function App() {
 
   return (
     <Provider store={store}>
-      <ShopNavigator />
+      <NavigationContainer/>
     </Provider>
   )
 }
-
-const styles = StyleSheet.create({
-
-});

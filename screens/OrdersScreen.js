@@ -26,7 +26,6 @@ const OrdersScreen = props => {
     }, [dispatch, setIsLoading])
 
     useEffect(() => {
-        console.log('loading orders')
         loadOrders()
     }, [loadOrders])
 

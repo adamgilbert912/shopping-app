@@ -19,6 +19,8 @@ const ProductListScreen = props => {
 
     const dispatch = useDispatch()
 
+    const userId = useSelector(state => state.auth.userId)
+
     const addProductToCart = product => {
         dispatch(addToCart(product))
     }
@@ -69,11 +71,11 @@ const ProductListScreen = props => {
                 onRefresh={loadProducts}
                 refreshing={isRefreshing}
                 data={shopProducts}
-                onPress={(product) => props.navigation.navigate('ProductDetailScreen', { canAddToCart: product.userId !== 'u1', product: product })}
+                onPress={(product) => props.navigation.navigate('ProductDetailScreen', { canAddToCart: product.userId !== userId, product: product })}
                 leftButtonTitle='Details'
-                rightButtonTitle={(id) => id === 'u1' ? 'Edit' : 'To Cart'}
+                rightButtonTitle={(id) => id === userId ? 'Edit' : 'To Cart'}
                 leftOnPress={(product) => props.navigation.navigate('ProductDetailScreen', { canAddToCart: true, product: product })}
-                rightOnPress={(product) => { product.userId === 'u1' ? props.navigation.navigate('ProductInputScreen', { product: product }) : addProductToCart(product) }}
+                rightOnPress={(product) => { product.userId === userId ? props.navigation.navigate('ProductInputScreen', { product: product }) : addProductToCart(product) }}
                 leftButtonColor={Colors.secondary}
                 rightButtonColor='green'
             />

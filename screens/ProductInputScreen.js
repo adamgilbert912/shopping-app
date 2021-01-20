@@ -40,7 +40,7 @@ const inputReducer = (state, action) => {
 
 const ProductInputScreen = props => {
     const product = props.navigation.getParam('product')
-    //handle validities and values inside reducer state
+
     const [inputState, dispatchInputState] = useReducer(inputReducer, {
         validities: {
             title: !!product,
@@ -131,7 +131,6 @@ const ProductInputScreen = props => {
                             inputType='title'
                             initialValue={product ? product.title : undefined}
                             placeholder='Title'
-                            errorMessage='Title is not valid.'
                             returnKeyType='next'
                             passValidityData={(validity) => dispatchInputState({ type: UPDATE_VALIDITY, inputType: 'title', isValid: validity })}
                             passValue={(value) => dispatchInputState({ type: UPDATE_VALUE, inputType: 'title', value: value })}
@@ -140,9 +139,8 @@ const ProductInputScreen = props => {
                         />
                         <ShortInput
                             initialValue={product ? '$' + product.price.toFixed(2).toString() : undefined}
-                            inputType='number'
+                            inputType='price'
                             header='Price:'
-                            errorMessage='Price is not valid.'
                             editable={product ? false : true}
                             placeholder='Price'
                             returnKeyType='next'
@@ -164,7 +162,6 @@ const ProductInputScreen = props => {
                             passValue={(value) => dispatchInputState({ type: UPDATE_VALUE, inputType: 'description', value: value })}
                             onSubmitEditing={() => imageInput.current.focus()}
                             header='Description:'
-                            errorMessage='Description is not valid.'
                             reference={descriptionInput}
                         />
                         <LongInput
@@ -175,7 +172,6 @@ const ProductInputScreen = props => {
                             header='Image URL:'
                             passValidityData={(validity) => dispatchInputState({ type: UPDATE_VALIDITY, inputType: 'imageSource', isValid: validity })}
                             passValue={(value) => dispatchInputState({ type: UPDATE_VALUE, inputType: 'imageSource', value: value })}
-                            errorMessage='Image URL is not valid.'
                             reference={imageInput}
                         />
                     </View>

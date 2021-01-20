@@ -18,8 +18,8 @@ const productsReducer = (state = inititalState, action) => {
         case SET_PRODDUCTS: {
             return {
                 ...state,
-                shopProducts: [...action.products, ...PRODUCTS],
-                userProducts: action.products.filter((value) => value.userId === 'u1')
+                shopProducts: action.products,
+                userProducts: action.userProducts
             }
         }
         case SET_CART_PRODUCTS: {
@@ -59,7 +59,7 @@ const productsReducer = (state = inititalState, action) => {
 
         case ADD_TO_PRODUCTS: {
             let newUserProducts = state.userProducts
-            const newProduct = new Product(action.title, action.price, action.imageSource, action.description, action.id, 'u1')
+            const newProduct = new Product(action.title, action.price, action.imageSource, action.description, action.id, action.ownerId)
 
             if (state.userProducts.length > 0) {
                 newUserProducts = [newProduct, ...newUserProducts]

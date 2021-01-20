@@ -9,7 +9,7 @@ import DefaultText from '../DefaultText'
 const shortInputReducer = (state, action) => {
     switch (action.type) {
         case 'UPDATE_INPUT': {
-            return {...state, value: action.value, isValid: action.isValid}
+            return {...state, value: action.value, isValid: action.isValid, errorMessage: action.errorMessage}
         }
 
         case 'UPDATE_TOUCHED': {
@@ -27,8 +27,11 @@ const ShortInput = props => {
     const [inputState, dispatch] = useReducer(shortInputReducer, {
         value: props.initialValue ? props.initialValue : '',
         isValid: props.initiallyValid ? props.initiallyValid : false,
+        errorMessage: null,
         touched: false
     })
+
+    const inputType = props.inputType.charAt(0).toUpperCase() + props.inputType.slice(1)
 
     const passValidityDataHandler = (data) => {
         props.passValidityData(data)
@@ -41,28 +44,73 @@ const ShortInput = props => {
     const inputHandler = text => {
         let isValid = true
         passValueHandler(text)
-
+        
         switch (props.inputType) {
-            case 'number': {
-                if (validate({number: text}, {number: {presence: {allowEmpty: false}, numericality: {greaterThan: 0}}})) {
+            case 'price': {
+                const error = validate({price: text}, {price: {presence: {allowEmpty: false}, numericality: {greaterThan: 0}}})
+                if (error) {
                     isValid = false
                 }
                 passValidityDataHandler(isValid)
-                dispatch({type: 'UPDATE_INPUT', value: text, isValid: isValid})
+                dispatch({type: 'UPDATE_INPUT', value: text, isValid: isValid, errorMessage: error ? error.price[0] + '.' : null})
+                return
             }
             
             case 'title': {
-                if (validate({title: text}, {title: {presence: {allowEmpty: false}}})) {
+                const error = validate({title: text}, {title: {presence: {allowEmpty: false}}})
+                if (error) {
+
                     isValid = false
                 }
                 passValidityDataHandler(isValid)
-                dispatch({type: 'UPDATE_INPUT', value: text, isValid: isValid})
+                dispatch({type: 'UPDATE_INPUT', value: text, isValid: isValid, errorMessage: error ? error.title[0] + '.' : null})
+                return
+            }
+            
+            case 'email': {
+                const error = validate({email: text}, {email: {presence: {allowEmpty: false}, email: true}})
+                if (error) {
+                    isValid = false
+                }
+                
+                passValidityDataHandler(isValid)
+                dispatch({type: 'UPDATE_INPUT', value: text, isValid: isValid, errorMessage: error ? error.email[0] + '.' : null})
+                return
+            }
+
+            case 'password': {
+                const isLongEnough = text.length >= 7
+                const hasLowerCase = text.match('/^(?=.*[a-z])$/')
+                const hasUpperCase = text.match('/^(?=.*[A-Z])$/')
+                const hasDigit = text.match('/^(?=.*\d)$/')
+
+                let error;
+
+                if (!isLongEnough) {
+                    isValid = false
+                    error = 'Must be at least 7 characters.'
+                }
+                if (!hasLowerCase) {
+                    isValid = false
+                    error = 'Must have a lower case letter.'
+                }
+                if (!hasUpperCase) {
+                    isValid = false
+                    error = 'Must have an upper case letter.'
+                }
+                if (!hasDigit) {
+                    isValid = false
+                    error = 'Must have at least one digit.'
+                }
+
+                passValidityDataHandler(isValid)
+                dispatch({type: 'UPDATE_INPUT', value: text, isValid: isValid, errorMessage: error})
+                return
             }
 
             default: {
                 return
             }
-
         }
     }
 
@@ -76,13 +124,13 @@ const ShortInput = props => {
                 <TextInput
                     {...props}
                     style={styles.titleAndPriceInput}
-                    onChangeText={(text) => inputHandler(text)}
+                    onChangeText={inputHandler}
                     value={inputState.value}
                     onBlur={() => dispatch({type: 'UPDATE_TOUCHED'})}
                     ref={props.reference}
                 />
             </View>
-            { inputState.touched && !inputState.isValid ? <View style={styles.errorMessageContainer}><DefaultText style={styles.errorMessage}>{props.errorMessage}</DefaultText></View> : undefined}
+            {props.inLogin ? undefined : (inputState.touched && !inputState.isValid ? <View style={styles.errorMessageContainer}><DefaultText style={styles.errorMessage}>{inputState.errorMessage ? inputState.errorMessage : inputType + " can't be blank."}</DefaultText></View> : undefined)}
         </View>
     )
 }

@@ -1,9 +1,10 @@
 import React from 'react'
 import { createStackNavigator, HeaderBackground } from 'react-navigation-stack'
-import { createDrawerNavigator } from 'react-navigation-drawer'
+import { createDrawerNavigator, DrawerNavigatorItems } from 'react-navigation-drawer'
 import { createAppContainer } from 'react-navigation'
-import { Text, Platform } from 'react-native'
+import { View, SafeAreaView, Dimensions } from 'react-native'
 import { HeaderButtons, Item } from 'react-navigation-header-buttons'
+import {createSwitchNavigator} from 'react-navigation'
 
 import ProductListScreen from '../screens/ProductListScreen'
 import ProductDetailScreen from '../screens/ProductDetailScreen'
@@ -13,6 +14,11 @@ import CartScreen from '../screens/CartScreen'
 import OrdersScreen from '../screens/OrdersScreen'
 import ProductInputScreen from '../screens/ProductInputScreen'
 import ManageProductsScreen from '../screens/ManageProductsScreen'
+import UserAuthScreen from '../screens/UserAuthScreen'
+import StartUpScreen from '../screens/StartUpSceen'
+import CheckOutButton from '../components/CheckOutButton'
+import { useDispatch } from 'react-redux'
+import { logOut } from '../store/actions/auth'
 
 const defaultNavigationOptions = {
     headerTintColor: Colors.secondary,
@@ -27,7 +33,7 @@ const HeaderTitle = title => {
     )
 }
 
-const availableProductStack = createStackNavigator({
+const AvailableProductStack = createStackNavigator({
     ProductListScreen: {
         screen: ProductListScreen,
         navigationOptions: {
@@ -57,7 +63,7 @@ const availableProductStack = createStackNavigator({
     }
 }, { defaultNavigationOptions: { ...defaultNavigationOptions} })
 
-const orderStack = createStackNavigator({
+const OrderStack = createStackNavigator({
     OrdersScreen: {
         screen: OrdersScreen,
         navigationOptions: {
@@ -67,7 +73,7 @@ const orderStack = createStackNavigator({
 }, { defaultNavigationOptions: defaultNavigationOptions })
 
 
-const manageProductsStack = createStackNavigator({
+const ManageProductsStack = createStackNavigator({
     ProductListScreen: {
         screen: ManageProductsScreen,
         navigationOptions: {
@@ -93,15 +99,15 @@ const manageProductsStack = createStackNavigator({
 }, { defaultNavigationOptions: defaultNavigationOptions})
 
 
-const drawerNavigator = createDrawerNavigator({
+const DrawerNavigator = createDrawerNavigator({
     Shop: {
-        screen: availableProductStack
+        screen: AvailableProductStack
     },
     Orders: {
-        screen: orderStack,
+        screen: OrderStack,
     },
     ManageProducts: {
-        screen: manageProductsStack,
+        screen: ManageProductsStack,
         navigationOptions: {
             title: 'Manage Items'
             
@@ -115,7 +121,37 @@ const drawerNavigator = createDrawerNavigator({
             fontFamily: 'fontBold',
             fontSize: 20
         }
+    },
+    contentComponent: props => {
+        let dispatch = useDispatch()
+        const logOutHandler = () => {
+            dispatch(logOut())
+            props.navigation.navigate('Auth')
+        }
+        return (
+            <View style={{flex: 1}}>
+                <SafeAreaView style={{flex: 1}} forceInset={{top: 'always', horizontal: 'never'}}>
+                    <DrawerNavigatorItems {...props}/>
+                    <View style={{flex: 1, alignItems: 'center', justifyContent: 'flex-end'}}>
+                    <CheckOutButton onPress={logOutHandler} style={{backgroundColor: 'red', width: Dimensions.get('window').width > 375 ? '95%' : '80%'}}>Log Out</CheckOutButton>
+                    </View>
+                </SafeAreaView>
+            </View>
+        )
     }
 })
 
-export default createAppContainer(drawerNavigator)
+const AuthenticationNavigator = createStackNavigator({
+    Auth: {
+        screen: UserAuthScreen,
+    }
+}, {defaultNavigationOptions: defaultNavigationOptions})
+
+const MainNavigator = createSwitchNavigator({
+    Start: StartUpScreen,
+    Auth: AuthenticationNavigator,
+    Shop: DrawerNavigator
+})
+
+
+export default createAppContainer(MainNavigator)
